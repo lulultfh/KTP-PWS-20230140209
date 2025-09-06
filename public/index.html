@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database KTP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    </style>
+</head>
+<body class="flex flex-col items-center py-10 min-h-screen">
+    <div class="container mx-auto p-8 lg:p-12">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-[#6A0066]">Aplikasi Database KTP</h1>
+            <p class="text-lg text-text-[#6A0066] mt-2">Kelola data KTP dengan mudah dan cepat.</p>
+        </header>
+
+        <div id="loading" class="loading-overlay hidden">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#8D67A4]"></div>
+        </div>
+
+        <div id="message-box" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 transform hidden"></div>
+
+        <div class="card p-8 mb-10">
+            <h2 id="form-title" class="text-2xl font-semibold mb-6 text-gray-800">Tambah Data KTP</h2>
+            <form id="ktp-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                    <label for="nik" class="block text-sm font-medium text-gray-700 mb-1">NIK</label>
+                    <input type="text" id="nik" name="nik" class="form-input" required>
+                </div>
+                <div>
+                    <label for="nama" class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
+                    <input type="text" id="nama" name="nama" class="form-input" required>
+                </div>
+                <div>
+                    <label for="tempat_lahir" class="block text-sm font-medium text-gray-700 mb-1">Tempat Lahir</label>
+                    <input type="text" id="tempat_lahir" name="tempat_lahir" class="form-input" required>
+                </div>
+                <div>
+                    <label for="tanggal_lahir" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                    <input type="date" id="tanggal_lahir" name="tanggal_lahir" class="form-input" required>
+                </div>
+                <div>
+                    <label for="jns_kelamin" class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                    <select id="jns_kelamin" name="jns_kelamin" class="form-input" required>
+                        <option value="">Pilih...</option>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="alamat" class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                    <input type="text" id="alamat" name="alamat" class="form-input" required>
+                </div>
+                <div>
+                    <label for="agama" class="block text-sm font-medium text-gray-700 mb-1">Agama</label>
+                    <input type="text" id="agama" name="agama" class="form-input" required>
+                </div>
+                <div>
+                    <label for="status_kawin" class="block text-sm font-medium text-gray-700 mb-1">Status Kawin</label>
+                    <input type="text" id="status_kawin" name="status_kawin" class="form-input" required>
+                </div>
+                <div>
+                    <label for="pekerjaan" class="block text-sm font-medium text-gray-700 mb-1">Pekerjaan (Opsional)</label>
+                    <input type="text" id="pekerjaan" name="pekerjaan" class="form-input">
+                </div>
+                <div>
+                    <label for="kewarganegaraan" class="block text-sm font-medium text-gray-700 mb-1">Kewarganegaraan</label>
+                    <input type="text" id="kewarganegaraan" name="kewarganegaraan" class="form-input" required>
+                </div>
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-end gap-4 mt-4">
+                    <button type="button" id="cancel-btn" class="btn btn-danger hidden">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card p-8">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800">Daftar Data KTP</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tempat, Tanggal Lahir</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ktp-table-body" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                </table>
+            </div>
+            <p id="no-data-msg" class="text-center text-gray-500 mt-4 hidden">Belum ada data KTP.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('ktp-form');
+            const tableBody = document.getElementById('ktp-table-body');
+            const formTitle = document.getElementById('form-title');
+            const submitBtn = document.getElementById('submit-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const loadingOverlay = document.getElementById('loading');
+            const messageBox = document.getElementById('message-box');
+            const noDataMsg = document.getElementById('no-data-msg');
+            let isUpdateMode = false;
+            let currentNik = null;
+
+            // Fungsi untuk menampilkan pesan notifikasi
+            function showMessage(text, type = 'success') {
+                messageBox.classList.remove('hidden');
+                messageBox.classList.add('flex', 'items-center', 'justify-center');
+                messageBox.innerHTML = `<div class="alert alert-${type} shadow-lg" role="alert">${text}</div>`;
+                
+                // Atur agar pesan hilang setelah 3 detik
+                setTimeout(() => {
+                    messageBox.classList.remove('flex');
+                    messageBox.classList.add('hidden');
+                }, 3000);
+            }
+
+            // Fungsi untuk menampilkan loading overlay
+            function showLoading() {
+                loadingOverlay.classList.remove('hidden');
+            }
+
+            // Fungsi untuk menyembunyikan loading overlay
+            function hideLoading() {
+                loadingOverlay.classList.add('hidden');
+            }
+
+            // Fungsi untuk mengambil dan menampilkan data dari API
+            async function fetchData() {
+                showLoading();
+                try {
+                    const response = await fetch('/api/ktp');
+                    const data = await response.json();
+                    renderTable(data);
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    showMessage('Gagal mengambil data dari server.', 'error');
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            // Fungsi untuk merender data ke dalam tabel
+            function renderTable(data) {
+                tableBody.innerHTML = '';
+                if (data.length === 0) {
+                    noDataMsg.classList.remove('hidden');
+                    return;
+                }
+                noDataMsg.classList.add('hidden');
+                
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    const date = new Date(item.tanggal_lahir).toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.nik}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.nama}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.tempat_lahir}, ${date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.alamat}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-nik="${item.nik}" class="text-indigo-600 hover:text-indigo-900 mr-4 edit-btn">Edit</button>
+                            <button data-nik="${item.nik}" class="text-red-600 hover:text-red-900 delete-btn">Hapus</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // Menambahkan event listener untuk tombol edit dan hapus
+                document.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', (e) => editHandler(e.target.dataset.nik));
+                });
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', (e) => deleteHandler(e.target.dataset.nik));
+                });
+            }
+
+            // Handler untuk proses edit
+            async function editHandler(nik) {
+                showLoading();
+                try {
+                    const response = await fetch(`/api/ktp/${nik}`);
+                    if (!response.ok) {
+                        throw new Error('Data tidak ditemukan');
+                    }
+                    const data = await response.json();
+                    
+                    // Isi formulir dengan data yang ada
+                    document.getElementById('nik').value = data.nik;
+                    document.getElementById('nama').value = data.nama;
+                    document.getElementById('tempat_lahir').value = data.tempat_lahir;
+                    document.getElementById('tanggal_lahir').value = data.tanggal_lahir.split('T')[0]; // Format tanggal
+                    document.getElementById('jns_kelamin').value = data.jns_kelamin;
+                    document.getElementById('alamat').value = data.alamat;
+                    document.getElementById('agama').value = data.agama;
+                    document.getElementById('status_kawin').value = data.status_kawin;
+                    document.getElementById('pekerjaan').value = data.pekerjaan || '';
+                    document.getElementById('kewarganegaraan').value = data.kewarganegaraan;
+
+                    // Ganti mode formulir ke "update"
+                    isUpdateMode = true;
+                    currentNik = nik;
+                    formTitle.textContent = 'Edit Data KTP';
+                    submitBtn.textContent = 'Perbarui Data';
+                    document.getElementById('nik').disabled = true;
+                    cancelBtn.classList.remove('hidden');
+
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                } catch (error) {
+                    console.error('Error fetching data for edit:', error);
+                    showMessage('Gagal mengambil data untuk diubah.', 'error');
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            // Handler untuk proses hapus
+            async function deleteHandler(nik) {
+                const isConfirmed = confirm('Apakah Anda yakin ingin menghapus data ini?'); // Menggunakan confirm bawaan
+                if (isConfirmed) {
+                    showLoading();
+                    try {
+                        const response = await fetch(`/api/ktp/${nik}`, {
+                            method: 'DELETE'
+                        });
+                        if (!response.ok) {
+                            throw new Error('Gagal menghapus data.');
+                        }
+                        await fetchData();
+                        showMessage('Data KTP berhasil dihapus.');
+                    } catch (error) {
+                        console.error('Error deleting data:', error);
+                        showMessage('Gagal menghapus data.', 'error');
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            }
+
+            // Handler untuk submit formulir
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                showLoading();
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                const method = isUpdateMode ? 'PUT' : 'POST';
+                const url = isUpdateMode ? `/api/ktp/${currentNik}` : '/api/ktp';
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Terjadi kesalahan');
+                    }
+
+                    // Reset formulir setelah berhasil
+                    form.reset();
+                    resetFormState();
+                    await fetchData();
+                    showMessage(result.message || 'Operasi berhasil!');
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    showMessage(error.message, 'error');
+                } finally {
+                    hideLoading();
+                }
+            });
+
+            // Handler untuk tombol batal
+            cancelBtn.addEventListener('click', () => {
+                form.reset();
+                resetFormState();
+            });
+
+            // Fungsi untuk mereset tampilan formulir ke mode "tambah"
+            function resetFormState() {
+                isUpdateMode = false;
+                currentNik = null;
+                formTitle.textContent = 'Tambah Data KTP';
+                submitBtn.textContent = 'Simpan Data';
+                document.getElementById('nik').disabled = false;
+                cancelBtn.classList.add('hidden');
+            }
+
+            // Ambil data pertama kali saat halaman dimuat
+            fetchData();
+        });
+    </script>
+</body>
+</html>
