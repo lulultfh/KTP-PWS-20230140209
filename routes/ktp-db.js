@@ -1,16 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db/db");
+const db = require("../db/db.js");
 
 router.get("/", (req,res) => {
     db.query("SELECT * FROM ktp", (err,result) =>{
-        if(err) return res.status(500).json({error:err});
+        if(err) return res.status(500).json({error: 'Terjadi kesalahan pada server.'});
         res.json(result);
     })
 })
 
-router.get('/:id', (req, res) => {
-    db.query('SELECT * FROM ktp WHERE id = ?', [req.params.id], (err, results) => {
+router.get('/:nik', (req, res) => {
+    db.query('SELECT * FROM ktp WHERE nik = ?', [req.params.nik], (err, results) => {
         if (err) return res.status(500).send('Internal Server Error');
         if (results.length === 0) return res.status(404).send('Data tidak ditemukan');
         res.json(results[0]);
@@ -98,9 +98,11 @@ router.put('/:nik', (req, res) => {
 });
 
 router.delete('/:nik', (req, res) => {
-    db.query('DELETE FROM ktp WHERE nik = ?', [req.params.id], (err, results) => {
+    db.query('DELETE FROM ktp WHERE nik = ?', [req.params.nik], (err, results) => {
         if (err) return res.status(500).send('Internal Server Error');
-        if (results.affectedRows === 0) return res.status(404).send('Order tidak ditemukan');
+        if (results.affectedRows === 0) return res.status(404).send('Data tidak ditemukan');
         res.status(204).send();
     });
 });
+
+module.exports = router;
