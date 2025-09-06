@@ -18,7 +18,6 @@
 │   ├── style.css
 ├── routes/                            # Routing API untuk CRUD
 │   ├── ktp-db.js
-├── uploads/                           # Untuk menyimpan gambar yang diunggah
 ├── .env
 ├── index.js                           # Entry point server Express
 └── README.md                          # Dokumentasi utama proyek
