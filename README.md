@@ -9,7 +9,7 @@
 - [PUT Method](#put-method)
 - [DELETE Method](#delete-method)
 
-# Project Structure
+## Project Structure
 ```
 ├── db/
 │   ├── db.js                          # Konfigurasi dan inisialisasi koneksi ke MySQL
